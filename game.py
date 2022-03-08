@@ -10,7 +10,6 @@ BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
 throwFireRate = 25
 
-
 # setting variables for the fire image and its rectangular area
 imgfb2 = pygame.image.load('Assets/fireborder2.png')
 imgfb2_rect = imgfb2.get_rect()
@@ -29,12 +28,29 @@ pygame.display.set_icon(icon)
 
 
 class Topscore:
-    def __init__(self):
+    def _init_(self):        
         self.high_score = 0
-
+        
+    def read(self):
+        f1 = open("highscore.txt", "r+")
+        self.high_score = f1.read()
+        f1.close()    
+        
     def top_score(self, score):
-        if score > self.high_score:
-            self.high_score = score
+        file1 = open("highscore.txt", "r+")
+        self.high_score = file1.read()
+        file1.close()
+        
+        if score > int (self.high_score):
+            file2 = open("highscore.txt", "w")
+            file2.truncate()
+            file2.write(str(score))
+            file2.close()
+            
+            file3 = open("highscore.txt", "r+")
+            self.high_score = file3.read()
+            file3.close()            
+           
         return self.high_score
 
 
@@ -88,9 +104,6 @@ class Fire:
     def update(self):
 
         canvas.blit(self.imgFire, self.imgFire_rect)
-        
-        music = pygame.mixer.Sound('FireMusic.mp3')
-        music.play()
 
         # making the bullet move left after it is created
         if self.imgFire_rect.left > 0:
@@ -125,8 +138,40 @@ def game_exit():
     sys.exit()
 
 
+# defining the starting of game
+def game_start():
+    canvas.fill(BLACK)
+
+    imgStart = pygame.image.load('Assets/StarWars.png')
+    imgStart_rect = imgStart.get_rect()
+    canvas.blit(imgStart, imgStart_rect)
+    
+    topscore.read()
+
+    pygame.mixer.music.load('GameStartMusic.mp3')                   # loads the music into system memory
+    pygame.mixer.music.play(-1, 0.0)
+
+    # to quit the game midway
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_exit()
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    game_exit()
+                else:
+                    game_loop()
+
+        pygame.display.update()
+
+
 # defining the function which is called when game is lost
 def game_over():
+
+    pygame.mixer.music.stop()
+    pygame.mixer.music.load('GameOverMusic.mp3')                   # loads the music into system memory
+    pygame.mixer.music.play(0)
     topscore.top_score(SCORE)
 
     canvas.fill(BLACK)
@@ -141,29 +186,6 @@ def game_over():
                 game_exit()
 
             if event.type == pygame.KEYDOWN:                            # checks if key is pressed
-                if event.key == pygame.K_ESCAPE:
-                    game_exit()
-                else:
-                    game_loop()
-
-        pygame.display.update()
-
-
-# defining the starting of game
-def game_start():
-    canvas.fill(BLACK)
-
-    imgStart = pygame.image.load('Assets/StarWars.png')
-    imgStart_rect = imgStart.get_rect()
-    canvas.blit(imgStart, imgStart_rect)
-
-    # to quit the game midway
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                game_exit()
-
-            if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     game_exit()
                 else:
@@ -191,15 +213,15 @@ def check_level():
         LEVEL = 3
     elif SCORE in range(45, 65):
         imgfb2_rect.bottom = 210
-        imgfb1_rect.top = windowHeight - 210
+        imgfb1_rect.top = windowHeight - 210        
         LEVEL = 4
     elif SCORE in range(65, 80):
         imgfb2_rect.bottom = 280
-        imgfb1_rect.top = windowHeight - 280
+        imgfb1_rect.top = windowHeight - 280       
         LEVEL = 5
     elif SCORE in range(80, 8000):
         imgfb2_rect.bottom = 350
-        imgfb1_rect.top = windowHeight - 350
+        imgfb1_rect.top = windowHeight - 350       
         LEVEL = 6
 
 
@@ -214,6 +236,10 @@ def game_loop():
     SCORE = 0
     global HIGHSCORE
     HIGHSCORE = topscore.top_score(SCORE)
+
+    pygame.mixer.music.stop()
+    pygame.mixer.music.load('GameLoopMusic.mp3')                   # loads the music into system memory
+    pygame.mixer.music.play(-1, 0.0)
 
     throwFireCounter = 0
     fire_list = []
@@ -230,6 +256,8 @@ def game_loop():
 
         # controlling the interval after which again a fireball is thrown
         if throwFireCounter == throwFireRate:
+            music1 = pygame.mixer.Sound('FireMusic.mp3')
+            music1.play(0)
             throwFireCounter = 0
             new_flame = Fire()
             fire_list.append(new_flame)
